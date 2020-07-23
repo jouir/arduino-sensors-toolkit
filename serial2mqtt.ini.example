@@ -1,0 +1,10 @@
+[mqtt]
+host = localhost
+port = 1883
+#client_id = serial2mqtt
+#topic_prefix = sensors
+#username = ***
+#password = ***
+
+[serial]
+interface = /dev/cuaU0

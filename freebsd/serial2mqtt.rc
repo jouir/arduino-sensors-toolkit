@@ -1,0 +1,65 @@
+#!/bin/sh
+# PROVIDE: serial2mqtt
+# REQUIRE: DAEMON NETWORKING
+# BEFORE: LOGIN
+# KEYWORD: shutdown
+
+# serial2mqtt_enable (bool):	Set to YES to enable serial2mqtt
+#				Default: NO
+# serial2mqtt_conf (str):		serial2mqtt configuration file
+#				Default: ${PREFIX}/etc/serial2mqtt.ini
+# serial2mqtt_user (str):		serial2mqtt daemon user
+#				Default: serial2mqtt
+# serial2mqtt_group (str):		serial2mqtt daemon group
+#				Default: serial2mqtt
+# serial2mqtt_flags (str):		Extra flags passed to serial2mqtt
+#				Default: none
+
+. /etc/rc.subr
+
+PATH=${PATH}:/usr/local/sbin:/usr/local/bin
+
+name="serial2mqtt"
+rcvar=serial2mqtt_enable
+load_rc_config $name
+
+: ${serial2mqtt_enable:="NO"}
+: ${serial2mqtt_user:="serial2mqtt"}
+: ${serial2mqtt_group:="serial2mqtt"}
+: ${serial2mqtt_flags:=""}
+: ${serial2mqtt_conf:="/usr/local/etc/${name}.ini"}
+: ${serial2mqtt_options:="${serial2mqtt_flags}"}
+
+if [ -f ${serial2mqtt_conf} ]; then
+	serial2mqtt_options="${serial2mqtt_options} --config ${serial2mqtt_conf}"
+fi
+
+logfile="/var/log/serial2mqtt/${name}.log"
+pidfile="/var/run/${name}.pid"
+command=/usr/sbin/daemon
+start_precmd="serial2mqtt_prestart"
+start_cmd="serial2mqtt_start"
+stop_cmd="serial2mqtt_stop"
+
+serial2mqtt_prestart() {
+	install -d -o ${serial2mqtt_user} -g ${serial2mqtt_group} -m750 /var/log/serial2mqtt
+}
+
+serial2mqtt_start() {
+	echo "Starting ${name}"
+	/usr/sbin/daemon -fcr -P ${pidfile} -u ${serial2mqtt_user} -o ${logfile} \
+		/usr/local/bin/python3.7 /usr/local/share/arduino-sensors-toolkit/${name}.py ${serial2mqtt_options}
+}
+
+serial2mqtt_stop() {
+	pid=$(check_pidfile $pidfile $command)
+	if [ -n "${pid}" ]; then
+		echo "Stopping ${name} (pid=${pid})"
+		kill -- -${pid}
+		wait_for_pids ${pid}
+	else
+		echo "${name} isn't running"
+	fi
+}
+
+run_rc_command "$1"

@@ -1,0 +1,2 @@
+# Options passed as daemon argument
+#DAEMON_OPTS="-c /etc/serial2mqtt.ini -v"

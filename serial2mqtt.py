@@ -30,14 +30,15 @@ def parse_sensor_values(data):
     """
     Input line: <humidity>,<temperature>,<sound>
     Output structure:
-        data = {
+        {
             'humidity': <humidity>,
             'temperature': <temperature>,
             'sound': <sound>
         }
     """
-    humidity, temperature, sound = data.decode('utf-8').strip().split(',')
-    return {'humidity': humidity, 'temperature': temperature, 'sound': sound}
+    metrics = ['humidity', 'temperature', 'sound']
+    values = data.decode('utf-8').strip().split(',')
+    return dict(zip(metrics, values))
 
 
 def connect_mqtt(config):
